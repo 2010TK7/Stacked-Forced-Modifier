@@ -1,4 +1,4 @@
-# Stacked Forced Modifier[堆叠强制调节器]
+# Stacking Forced Loud Modifier[堆叠强制调节器]
 防止因挑战分数过高导致的崩溃  
 Prevent crash in crime spree with huge score.  
 挑战分数大于等于480分时将在本地生成一个不会导致卡顿的调节器列表  
