@@ -75,30 +75,56 @@ end
 local OldFunc5 = CrimeSpreeManager.server_active_modifiers
 function CrimeSpreeManager:server_active_modifiers()
 	if not self.SFM.active_modifiers then
+		local data = {
+			id = tweak_data.crime_spree.modifiers.forced[1].id,
+			level = math.floor((self._global.peer_spree_levels and self._global.peer_spree_levels[1] or self._global.spree_level or 0) / tweak_data.crime_spree.modifier_levels.forced)
+		}
 		local active_modifiers = self:is_active() and OldFunc5(self) or OldFunc4(self)
 		if not active_modifiers or #active_modifiers == 0 then
-			return {{id = tweak_data.crime_spree.modifiers.forced[1].id, level = math.floor((server_spree_level ~= -1 and server_spree_level or self._global.spree_level or 0) / tweak_data.crime_spree.modifier_levels.forced)}}
+			return {data}
+		end
+		if not self:is_active() then
+			local modifiers = {}
+			local count = 0
+			for k, v in ipairs(active_modifiers) do
+				if table.contains(NewFunc(), v.id) then
+					if not modifiers[v.id] then
+						modifiers[v.id] = true
+					else
+						table.insert(modifiers, 1, k)
+					end
+				else
+					count = count + 1
+					if count > data.level then
+						table.insert(modifiers, 1, k)
+					end
+				end
+			end
+			if #modifiers ~= 0 then
+				for _, k in ipairs(modifiers) do
+					table.remove(active_modifiers, k)
+				end
+				self._global.modifiers = active_modifiers
+			end
 		end
 		self.SFM.active_modifiers = {}
-		local modifiers = deep_clone(NewFunc())
+		local modifiers = {}
 		for _, v in ipairs(active_modifiers) do
 			local Checker = false
-			for k, id in ipairs(modifiers) do
+			for k, id in ipairs(NewFunc()) do
 				if v.id == id then
-					Checker = k
+					if not modifiers[v.id] then
+						Checker = k
+						modifiers[v.id] = true
+					end
 					break
 				end
 			end
 			if Checker then
 				table.insert(self.SFM.active_modifiers, v)
-				table.remove(modifiers, k)
-				if #modifiers == 0 then
-					break
-				end
 			end
 		end
-		local server_spree_level = self:server_spree_level()
-		table.insert(self.SFM.active_modifiers, {id = tweak_data.crime_spree.modifiers.forced[1].id, level = math.floor((server_spree_level ~= -1 and server_spree_level or self._global.spree_level or 0) / tweak_data.crime_spree.modifier_levels.forced)})
+		table.insert(self.SFM.active_modifiers, data)
 	end
 	return self.SFM.active_modifiers
 end
@@ -110,10 +136,9 @@ function CrimeSpreeManager:modifiers_to_select(table_name, ...)
 	end
 	local base_number = self:server_spree_level() / tweak_data.crime_spree.modifier_levels.forced
 	local active_modifiers = deep_clone(self:is_active() and OldFunc5(self) or OldFunc4(self))
-	local modifiers = deep_clone(NewFunc())
 	for i = #active_modifiers, 1, -1 do
 		local Checker = false
-		for k, id in ipairs(modifiers) do
+		for k, id in ipairs(NewFunc()) do
 			if active_modifiers[i].id == id then
 				Checker = k
 				break
@@ -121,15 +146,11 @@ function CrimeSpreeManager:modifiers_to_select(table_name, ...)
 		end
 		if Checker then
 			table.remove(active_modifiers, i)
-			table.remove(modifiers, k)
-			if #modifiers == 0 then
-				break
-			end
 		end
 	end
 	if base_number - #active_modifiers > 0 then
 		local Checker = false
-		modifiers = {}
+		local modifiers = {}
 		for _, v in ipairs(active_modifiers) do
 			if v.id == tweak_data.crime_spree.modifiers.forced[1].id then
 				Checker = true
@@ -162,12 +183,8 @@ end
 
 local OldFunc7 = CrimeSpreeManager.select_modifier
 function CrimeSpreeManager:select_modifier(modifier_id)
-	if not (self.SFM.active_modifiers and table.contains(NewFunc(), modifier_id)) then
-		return OldFunc7(self, modifier_id)
-	end
-	local Checker = OldFunc7(self, modifier_id)
-	if Checker then
-		local Checker = Checker
+	if self.SFM.active_modifiers and table.contains(NewFunc(), modifier_id) then
+		local Checker = true
 		for _, data in ipairs(self.SFM.active_modifiers) do
 			if data.id == modifier_id then
 				Checker = false
@@ -178,7 +195,7 @@ function CrimeSpreeManager:select_modifier(modifier_id)
 			table.insert(self.SFM.active_modifiers, {id = modifier_id, level = self:spree_level()})
 		end
 	end
-	return Checker
+	return OldFunc7(self, modifier_id)
 end
 
 local OldFunc8 = CrimeSpreeManager.on_left_lobby
