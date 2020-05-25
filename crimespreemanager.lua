@@ -14,6 +14,9 @@ end
 
 local OldFunc1 = CrimeSpreeManager._setup_modifiers
 function CrimeSpreeManager:_setup_modifiers()
+	if not self:is_active() then
+		return
+	end
 	local Checker = false
 	for _, active_data in ipairs(self:server_active_modifiers()) do
 		if self:get_modifier(active_data.id).class == "ModifierEnemyHealthAndDamage" then
@@ -47,7 +50,10 @@ function CrimeSpreeManager:get_modifier_stack_data(modifier_type)
 	local modifiers = self:is_active() and self:server_active_modifiers() or self:active_modifiers()
 	for _, active_data in ipairs(modifiers) do
 		if active_data.id == tweak_data.crime_spree.modifiers.forced[1].id then
-			stack = active_data.level
+			stack = math.max(math.floor((self._global.peer_spree_levels and self._global.peer_spree_levels[1] or self._global.spree_level or 0) / tweak_data.crime_spree.modifier_levels.forced), active_data.level)
+			if stack > active_data.level then
+				active_data.level = stack
+			end
 			break
 		end
 	end
@@ -124,7 +130,7 @@ function CrimeSpreeManager:server_active_modifiers()
 				table.insert(self.SFM.active_modifiers, v)
 			end
 		end
-		table.insert(self.SFM.active_modifiers, data)
+		table.insert(self.SFM.active_modifiers, #self.SFM.active_modifiers, data)
 	end
 	return self.SFM.active_modifiers
 end
