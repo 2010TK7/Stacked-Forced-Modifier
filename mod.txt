@@ -3,7 +3,7 @@
 	"description": "Prevent crash in crime spree with huge score.",
 	"author": "TK7",
 	"contact": "https://steamcommunity.com/id/2010TK7",
-	"version": "1.5",
+	"version": "1.6",
 	"image": "cs.png",
 	"blt_version": 2,
 	"hooks": [

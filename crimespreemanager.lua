@@ -36,8 +36,10 @@ function CrimeSpreeManager:get_modifier_stack_data(modifier_type)
 		if active_data.id == tweak_data.crime_spree.modifiers.forced[1].id then
 			if stack > active_data.level then
 				if Network:is_server() then
-					for i = active_data.level + 1, stack do
-						managers.network:session():send_to_peers("sync_crime_spree_modifier", unpack({tweak_data.crime_spree.repeating_modifiers.forced[1].id .. "SFM_" .. tostring(i), i, false}))
+					if active_data.level == 0 then
+						self:send_crime_spree_modifier(nil, {id = active_data.id, level = stack}, true)
+					else
+						self:send_crime_spree_modifier(nil, {level = active_data.level + 1, SFM = stack}, true)
 					end
 				end
 				active_data.level = stack
@@ -118,20 +120,19 @@ function CrimeSpreeManager:send_crime_spree_modifier(peer, modifier_data, ...)
 	if not modifier_data then
 		return
 	end
-	if modifier_data.id ~= tweak_data.crime_spree.modifiers.forced[1].id then
+	if type(modifier_data.SFM) == "number" then
+		for i = modifier_data.level, (modifier_data.SFM - 1) do
+			OldFunc6(self, peer, {id = tweak_data.crime_spree.repeating_modifiers.forced[1].id .. "SFM_" .. tostring(i), level = i}, ...)
+		end
+		return OldFunc6(self, peer, {id = tweak_data.crime_spree.repeating_modifiers.forced[1].id .. "SFM_" .. tostring(modifier_data.SFM), level = modifier_data.SFM}, ...)
+	end
+	if table.contains(NewTable, modifier_data.id) then
 		return OldFunc6(self, peer, modifier_data, ...)
 	end
-	if modifier_data.level ~= 0 then
-		if peer then
-			managers.network:session():send_to_peer(peer, "sync_crime_spree_modifier", unpack({modifier_data.id, 1, false}))
-			for i = 2, modifier_data.level do
-				managers.network:session():send_to_peer(peer, "sync_crime_spree_modifier", unpack({tweak_data.crime_spree.repeating_modifiers.forced[1].id .. "SFM_" .. tostring(i), i, false}))
-			end
-		else
-			managers.network:session():send_to_peers("sync_crime_spree_modifier", unpack({modifier_data.id, 1, false}))
-			for i = 2, modifier_data.level do
-				managers.network:session():send_to_peers("sync_crime_spree_modifier", unpack({tweak_data.crime_spree.repeating_modifiers.forced[1].id .. "SFM_" .. tostring(i), i, false}))
-			end
+	if modifier_data.id == tweak_data.crime_spree.modifiers.forced[1].id then
+		if modifier_data.level ~= 0 then
+			OldFunc6(self, peer, {id = modifier_data.id, level = 1}, ...)
+			return self:send_crime_spree_modifier(peer, {level = 2, SFM = modifier_data.level}, ...)
 		end
 	end
 end
